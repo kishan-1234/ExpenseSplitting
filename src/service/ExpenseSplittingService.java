@@ -8,9 +8,6 @@ import models.User;
 
 public interface ExpenseSplittingService {
 
-    ExpenseException addExpense(User user, Expense expense);
-    ExpenseException addGroupExpense(User user, Expense expense, Group group);
+    ExpenseException addExpense(Expense expense);
     ExpenseSettlement getExpenseSettlement(User user);
-    ExpenseSettlement getGroupExpenseSettlement(Group group);
-    ExpenseSettlement getUserGroupExpenseSettlement(User user, Group group);
 }

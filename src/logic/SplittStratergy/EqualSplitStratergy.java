@@ -5,6 +5,7 @@ import models.Transaction;
 import models.User;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,30 +29,19 @@ public class EqualSplitStratergy implements ISplittStratergy {
     public List<Transaction> splitExpense(Expense expense) {
 
         Double perUserExpense = expense.getAmount()/expense.getUsers().size();
-        List<Transaction> transactions = new ArrayList<Transaction>();
-        Integer userIndex = 0;
-        Double userExpense = perUserExpense;
-        for(Map.Entry<User, Double> payingUser : expense.getPayingUsersMap().entrySet())
-        {
-            Double paidAmount = payingUser.getValue();
-            while(paidAmount>0.0 && userIndex<expense.getUsers().size())
-            {
-                Transaction transaction = new Transaction();
-                transaction.setPaidByUser(payingUser.getKey());
-                transaction.setPaidToUser(expense.getUsers().get(userIndex));
-                if(paidAmount>=userExpense) {
-                    paidAmount -= userExpense;
-                    transaction.setAmount(userExpense);
-                    userExpense = perUserExpense;
-                    ++userIndex;
-                } else {
-                    transaction.setAmount(paidAmount);
-                    userExpense -= paidAmount;
-                    paidAmount = 0.0;
-                }
-                transactions.add(transaction);
+        expense.setPayeeUsersMap(new HashMap<>());
+        expense.getUsers().stream().forEach(user ->{
+            expense.getPayeeUsersMap().put(user, perUserExpense);
+        });
+        expense.getPayingUsersMap().forEach((user,amount)-> {
+            if(amount<perUserExpense) {
+                expense.getPayeeUsersMap().put(user, perUserExpense-amount);
+                expense.getPayingUsersMap().remove(user);
+            } else {
+                expense.getPayingUsersMap().put(user, amount-perUserExpense);
+                expense.getPayeeUsersMap().remove(user);
             }
-        }
-        return transactions;
+        });
+        return SplitHelper.SplitExpense(expense);
     }
 }

@@ -5,33 +5,34 @@ import models.Expense;
 import models.ExpenseSettlement;
 import models.Group;
 import models.User;
+import repository.UserExpenseRepository;
 
 public class ExpenseSplitServiceImpl implements ExpenseSplittingService{
 
-    @Override
-    public ExpenseException addExpense(User user, Expense expense) {
+    private static ExpenseSplitServiceImpl expenseSplitService;
 
+    private ExpenseSplitServiceImpl() {}
 
-        return null;
+    public static ExpenseSplitServiceImpl getInstance() {
+        if(expenseSplitService==null) {
+            synchronized (ExpenseSplitServiceImpl.class) {
+                if(expenseSplitService==null) {
+                    expenseSplitService = new ExpenseSplitServiceImpl();
+                }
+            }
+        }
+        return expenseSplitService;
     }
 
     @Override
-    public ExpenseException addGroupExpense(User user, Expense expense, Group group) {
-        return null;
+    public ExpenseException addExpense(Expense expense) {
+
+        return UserExpenseRepository.getInstance().addUserExpense(expense);
     }
 
     @Override
     public ExpenseSettlement getExpenseSettlement(User user) {
-        return null;
-    }
 
-    @Override
-    public ExpenseSettlement getGroupExpenseSettlement(Group group) {
-        return null;
-    }
-
-    @Override
-    public ExpenseSettlement getUserGroupExpenseSettlement(User user, Group group) {
-        return null;
+        return UserExpenseRepository.getInstance().getUserExpenseSettlement(user);
     }
 }
