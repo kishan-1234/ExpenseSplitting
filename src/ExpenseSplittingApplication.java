@@ -12,11 +12,12 @@ import java.util.Map;
 
 @Slf4j
 public class ExpenseSplittingApplication {
-    public static void main(String[] args) {
-        System.out.println("Hello world!");
-        Expense expense = new Expense();
-        expense.setExpenseSplitType(ExpenseSplitType.EQUAL_SPLIT);
-        List<User> users = new ArrayList<User>();
+
+    private static Expense expense;
+    private static List<User> users;
+    static {
+        expense = new Expense();
+        users = new ArrayList<>();
         User user1 = User.builder().Id(1L).build();
         User user2 = User.builder().Id(2L).build();
         User user3 = User.builder().Id(3L).build();
@@ -28,28 +29,94 @@ public class ExpenseSplittingApplication {
         users.add(user4);
         users.add(user5);
         expense.setUsers(users);
+    }
+
+
+    public static void main(String[] args) {
+//        testEqualSplit();
+//        testExactSplit();
+        testPercentageSplit();
+    }
+
+    private static void testEqualSplit() {
+
+        log.info("###################################### TEST EQUAL SPLIT START ######################################\n");
+        expense.setExpenseSplitType(ExpenseSplitType.EQUAL_SPLIT);
         expense.setAmount(200.0);
         Map<User,Double> payingUsers = new HashMap<User, Double>();
-        payingUsers.put(user4, 100.0);
-        payingUsers.put(user3, 100.0);
-//        payingUsers.put(user3, 125.0);
-        Map<User,Double> payeeUsers = new HashMap<User, Double>();
-        payeeUsers.put(user1, 40.0);
-        payeeUsers.put(user2, 30.0);
-        payeeUsers.put(user3, 20.0);
-        payeeUsers.put(user4, 10.0);
-//        payeeUsers.put(user5, 20.0);
+        payingUsers.put(users.get(4), 10.0);
+        payingUsers.put(users.get(1), 190.0);
         expense.setPayingUsersMap(payingUsers);
-//        expense.setPayeeUsersMap(payeeUsers);
 
         ExpenseSplitServiceImpl.getInstance().addExpense(expense);
-        ExpenseSettlement expenseSettlement = ExpenseSplitServiceImpl.getInstance().getExpenseSettlement(user4);
-        expenseSettlement.getExpenseSettlementTransactions().stream().forEach(transaction -> {
-            log.info("Paid By: {}, Paid To : {}, Amount : {}", transaction.getPaidByUser(), transaction.getPaidToUser(), transaction.getAmount());
+        logUserBalance(users.get(0));
+        logUserBalance(users.get(1));
+        logUserBalance(users.get(2));
+        logUserBalance(users.get(3));
+        logUserBalance(users.get(4));
+        log.info("######################################  TEST EQUAL SPLIT END ######################################\n");
+    }
+
+    private static void testExactSplit() {
+
+        log.info("###################################### TEST EXACT SPLIT START ######################################\n");
+        expense.setExpenseSplitType(ExpenseSplitType.EXACT_SPLIT);
+        expense.setAmount(200.0);
+        Map<User,Double> payingUsers = new HashMap<User, Double>();
+        payingUsers.put(users.get(4), 10.0);
+        payingUsers.put(users.get(1), 190.0);
+        expense.setPayingUsersMap(payingUsers);
+        Map<User,Double> payeeUsers = new HashMap<User, Double>();
+        payeeUsers.put(users.get(0), 20.0);
+        payeeUsers.put(users.get(1), 30.0);
+        payeeUsers.put(users.get(2), 25.0);
+        payeeUsers.put(users.get(3), 25.0);
+        payeeUsers.put(users.get(4), 100.0);
+        expense.setPayeeUsersMap(payeeUsers);
+
+        ExpenseSplitServiceImpl.getInstance().addExpense(expense);
+        logUserBalance(users.get(0));
+        logUserBalance(users.get(1));
+        logUserBalance(users.get(2));
+        logUserBalance(users.get(3));
+        logUserBalance(users.get(4));
+        log.info("######################################  TEST EXACT SPLIT END ######################################\n");
+    }
+
+    private static void testPercentageSplit() {
+
+        log.info("###################################### TEST PERCENTAGE SPLIT START ######################################\n");
+        expense.setExpenseSplitType(ExpenseSplitType.PERCENTAGE_SPLIT);
+        expense.setAmount(100.0);
+        Map<User,Double> payingUsers = new HashMap<User, Double>();
+        payingUsers.put(users.get(0), 60.0);
+        payingUsers.put(users.get(1), 40.0);
+        expense.setPayingUsersMap(payingUsers);
+        Map<User,Double> payeeUsers = new HashMap<User, Double>();
+        payeeUsers.put(users.get(0), 20.0);
+        payeeUsers.put(users.get(1), 30.0);
+        payeeUsers.put(users.get(2), 10.0);
+        payeeUsers.put(users.get(3), 15.0);
+        payeeUsers.put(users.get(4), 25.0);
+        expense.setPayeeUsersMap(payeeUsers);
+
+        ExpenseSplitServiceImpl.getInstance().addExpense(expense);
+        logUserBalance(users.get(0));
+        logUserBalance(users.get(1));
+        logUserBalance(users.get(2));
+        logUserBalance(users.get(3));
+        logUserBalance(users.get(4));
+        log.info("######################################  TEST PERCENTAGE SPLIT END ######################################\n");
+    }
+
+    private static void logUserBalance(User user) {
+
+        ExpenseSettlement expenseSettlement = ExpenseSplitServiceImpl.getInstance().getExpenseSettlement(user);
+        log.info("Total balance amount for user: {} is : {} \n", user, expenseSettlement.getBalanceAmount());
+        log.info("###################################### BALACES OF USER :{} ######################################", user);
+        expenseSettlement.getExpenseSettlementBalances().stream().forEach(balance -> {
+            log.info("Balance user : {}, AmountType : {}, Balance Amount : {}", balance.getUser(), balance.getAmountType(), balance.getBalanceAmount());
         });
-        expenseSettlement = ExpenseSplitServiceImpl.getInstance().getExpenseSettlement(user3);
-        expenseSettlement.getExpenseSettlementTransactions().stream().forEach(transaction -> {
-            log.info("Paid By: {}, Paid To : {}, Amount : {}", transaction.getPaidByUser(), transaction.getPaidToUser(), transaction.getAmount());
-        });
+        log.info("#######################################################################################################\n");
     }
 }

@@ -4,10 +4,7 @@ import exceptions.ExpenseException;
 import logic.ExpenseCalculator;
 import logic.SplittStratergy.SplitStratergy;
 import lombok.extern.slf4j.Slf4j;
-import models.Expense;
-import models.ExpenseSettlement;
-import models.Transaction;
-import models.User;
+import models.*;
 
 import java.util.*;
 
@@ -15,10 +12,11 @@ import java.util.*;
 public class UserExpenseRepository {
 
     private static UserExpenseRepository userExpenseRepository;
+    private static SplitStratergy splitStratergy = SplitStratergy.getInstance();
 
-    private static Map<User, List<Transaction>> userTransactionsMap;
+    private static Map<User, ExpenseSettlement> userBalanceMap;
     static {
-        userTransactionsMap = new HashMap<>();
+        userBalanceMap = new HashMap<>();
     }
     private UserExpenseRepository() {}
 
@@ -37,17 +35,12 @@ public class UserExpenseRepository {
 
         ExpenseException exception = null;
         try {
-            List<Transaction> transactions = SplitStratergy.getInstance().splitExpense(expense);
+            List<Transaction> transactions = splitStratergy.splitExpense(expense);
             transactions.stream().forEach(transaction -> {
-//                ExpenseCalculator.getInstance().addTransaction(transaction);
                 User payingUser = transaction.getPaidByUser();
-                    if (!userTransactionsMap.containsKey(payingUser)) {
-                        userTransactionsMap.put(transaction.getPaidByUser(), new ArrayList<>(Arrays.asList(transaction)));
-                    } else {
-                        List<Transaction> userTransactions = userTransactionsMap.get(payingUser);
-                        userTransactions.add(transaction);
-                        userTransactionsMap.put(payingUser, userTransactions);
-                    }
+                User payeeUser = transaction.getPaidToUser();
+                addUserBalance(payingUser, payeeUser, AmountType.PAID, transaction.getAmount());
+                addUserBalance(payeeUser, payingUser, AmountType.BORROWED, -transaction.getAmount());
             });
         } catch (Exception e) {
             log.error("Error in adding user expense : {}", e);
@@ -56,13 +49,28 @@ public class UserExpenseRepository {
         return exception;
     }
 
+    private void addUserBalance(User user, User balanceUser, AmountType amountType, Double amount) {
+
+        if (!this.userBalanceMap.containsKey(user)) {
+            this.userBalanceMap.put(user, new ExpenseSettlement());
+        }
+        ExpenseSettlement expenseSettlement = userBalanceMap.get(user);
+        expenseSettlement.getExpenseSettlementBalances().add(Balance.builder()
+                .user(balanceUser)
+                .amountType(amountType)
+                .balanceAmount(amount)
+                .build());
+        expenseSettlement.setBalanceAmount(expenseSettlement.getBalanceAmount()+amount);
+        userBalanceMap.put(user, expenseSettlement);
+    }
+
     public ExpenseSettlement getUserExpenseSettlement(User user) {
 
         ExpenseSettlement expenseSettlement = null;
         try {
-            if(!userTransactionsMap.containsKey(user))
+            if(!userBalanceMap.containsKey(user))
                 return expenseSettlement;
-            expenseSettlement = ExpenseSettlement.builder().expenseSettlementTransactions(userTransactionsMap.get(user)).build();
+            expenseSettlement = userBalanceMap.get(user);
         } catch (Exception e) {
             log.error("Error in getting user expense settlement : {}", e);
         }

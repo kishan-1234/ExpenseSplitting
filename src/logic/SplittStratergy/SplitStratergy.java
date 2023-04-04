@@ -8,6 +8,9 @@ import java.util.List;
 public class SplitStratergy {
 
     private static SplitStratergy splitStratergy;
+    private static EqualSplitStratergy equalSplitStratergy = EqualSplitStratergy.getInstance();
+    private static ExactSplitStratergy exactSplitStratergy = ExactSplitStratergy.getInstance();
+    private static PercentageSplitStratergy percentageSplitStratergy = PercentageSplitStratergy.getInstance();
 
     public static SplitStratergy getInstance() {
         if(splitStratergy==null) {
@@ -26,13 +29,13 @@ public class SplitStratergy {
         ISplittStratergy splittStratergy = null;
         switch (expense.getExpenseSplitType()) {
             case EXACT_SPLIT:
-                splittStratergy = ExactSplitStratergy.getInstance();
+                splittStratergy = exactSplitStratergy;
                 break;
             case EQUAL_SPLIT:
-                splittStratergy = EqualSplitStratergy.getInstance();
+                splittStratergy = equalSplitStratergy;
                 break;
             case PERCENTAGE_SPLIT:
-                splittStratergy = PercentageSplitStratergy.getInstance();
+                splittStratergy = percentageSplitStratergy;
                 break;
         }
         return splittStratergy.splitExpense(expense);

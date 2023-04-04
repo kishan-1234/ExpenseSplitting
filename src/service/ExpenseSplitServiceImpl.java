@@ -10,6 +10,7 @@ import repository.UserExpenseRepository;
 public class ExpenseSplitServiceImpl implements ExpenseSplittingService{
 
     private static ExpenseSplitServiceImpl expenseSplitService;
+    private static UserExpenseRepository userExpenseRepository = UserExpenseRepository.getInstance();
 
     private ExpenseSplitServiceImpl() {}
 
@@ -27,12 +28,12 @@ public class ExpenseSplitServiceImpl implements ExpenseSplittingService{
     @Override
     public ExpenseException addExpense(Expense expense) {
 
-        return UserExpenseRepository.getInstance().addUserExpense(expense);
+        return userExpenseRepository.addUserExpense(expense);
     }
 
     @Override
     public ExpenseSettlement getExpenseSettlement(User user) {
 
-        return UserExpenseRepository.getInstance().getUserExpenseSettlement(user);
+        return userExpenseRepository.getUserExpenseSettlement(user);
     }
 }

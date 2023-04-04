@@ -10,6 +10,7 @@ import java.util.Map;
 public class PercentageSplitStratergy implements ISplittStratergy {
 
     private static PercentageSplitStratergy percentageSplitStratergy;
+    private static ExactSplitStratergy exactSplitStratergy = ExactSplitStratergy.getInstance();
 
     private PercentageSplitStratergy() {};
 
@@ -27,7 +28,7 @@ public class PercentageSplitStratergy implements ISplittStratergy {
     @Override
     public List<Transaction> splitExpense(Expense expense) {
         transformToExact(expense);
-        return ExactSplitStratergy.getInstance().splitExpense(expense);
+        return exactSplitStratergy.splitExpense(expense);
     }
 
     private void transformToExact(Expense expense) {

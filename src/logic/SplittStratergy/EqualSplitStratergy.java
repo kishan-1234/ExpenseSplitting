@@ -4,10 +4,7 @@ import models.Expense;
 import models.Transaction;
 import models.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EqualSplitStratergy implements ISplittStratergy {
 
@@ -33,15 +30,21 @@ public class EqualSplitStratergy implements ISplittStratergy {
         expense.getUsers().stream().forEach(user ->{
             expense.getPayeeUsersMap().put(user, perUserExpense);
         });
-        expense.getPayingUsersMap().forEach((user,amount)-> {
+        Iterator<Map.Entry<User,Double>> iter = expense.getPayingUsersMap().entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<User,Double> entry = iter.next();
+            User user = entry.getKey();
+            Double amount = entry.getValue();
             if(amount<perUserExpense) {
                 expense.getPayeeUsersMap().put(user, perUserExpense-amount);
-                expense.getPayingUsersMap().remove(user);
+                iter.remove();
             } else {
-                expense.getPayingUsersMap().put(user, amount-perUserExpense);
+                entry.setValue(amount-perUserExpense);
                 expense.getPayeeUsersMap().remove(user);
             }
-        });
+        }
+
+
         return SplitHelper.SplitExpense(expense);
     }
 }
