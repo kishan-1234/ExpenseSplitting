@@ -14,5 +14,5 @@ To run this project:
 
 1. Clone it
 2. Run this command: $ mvn clean install
-   Above command will download all dependencies from maven central
+   This command will download all dependencies from maven central
 3. Run main class - ExpenseSplittingApplication
